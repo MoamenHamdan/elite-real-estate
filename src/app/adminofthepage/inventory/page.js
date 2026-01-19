@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiEdit2, FiTrash2, FiEye, FiSearch, FiPlus, FiAlertCircle } from 'react-icons/fi';
-import { ref, onValue, remove, update } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { collection, onSnapshot, doc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
 export default function InventoryPage() {
@@ -14,26 +14,24 @@ export default function InventoryPage() {
     const [deleteId, setDeleteId] = useState(null);
 
     useEffect(() => {
-        const propertiesRef = ref(database, 'properties');
-        onValue(propertiesRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const propertyList = Object.entries(data).map(([id, value]) => ({
-                    id,
-                    ...value,
-                }));
-                setProperties(propertyList);
-            } else {
-                setProperties([]);
-            }
+        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const propertyList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                // Handle Firestore timestamp for sorting/display if needed
+                createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+            }));
+            setProperties(propertyList);
             setLoading(false);
         });
+        return () => unsubscribe();
     }, []);
 
     const handleDelete = async () => {
         if (!deleteId) return;
         try {
-            await remove(ref(database, `properties/${deleteId}`));
+            await deleteDoc(doc(db, 'properties', deleteId));
             setDeleteId(null);
         } catch (err) {
             alert('Failed to delete property: ' + err.message);
@@ -43,7 +41,7 @@ export default function InventoryPage() {
     const toggleVisibility = async (id, currentStatus) => {
         const newStatus = currentStatus === 'Acquired' ? 'For Sale' : 'Acquired';
         try {
-            await update(ref(database, `properties/${id}`), { status: newStatus });
+            await updateDoc(doc(db, 'properties', id), { status: newStatus });
         } catch (err) {
             alert('Failed to update status: ' + err.message);
         }
@@ -69,7 +67,7 @@ export default function InventoryPage() {
                     <h1 className="text-3xl font-bold text-primary">Property Inventory</h1>
                     <p className="text-gray-500">Manage your real estate portfolio and visibility.</p>
                 </div>
-                <Link href="/admin/add">
+                <Link href="/adminofthepage/add">
                     <button className="btn-primary flex items-center gap-2">
                         <FiPlus /> Add New Property
                     </button>
@@ -130,7 +128,7 @@ export default function InventoryPage() {
                                             <button
                                                 onClick={() => toggleVisibility(prop.id, prop.status)}
                                                 className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${prop.status === 'For Sale' ? 'bg-success/10 text-success' :
-                                                        prop.status === 'Sold' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
+                                                    prop.status === 'Sold' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
                                                     }`}
                                             >
                                                 {prop.status}
@@ -147,7 +145,7 @@ export default function InventoryPage() {
                                                         <FiEye />
                                                     </button>
                                                 </Link>
-                                                <Link href={`/admin/edit/${prop.id}`}>
+                                                <Link href={`/adminofthepage/edit/${prop.id}`}>
                                                     <button className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-500 rounded-lg transition-all" title="Edit Property">
                                                         <FiEdit2 />
                                                     </button>

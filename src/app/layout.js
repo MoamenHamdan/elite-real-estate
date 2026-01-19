@@ -1,11 +1,10 @@
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const metadata = {
-  title: "Elite Estates | Premium Real Estate Investment",
-  description: "Luxury digital showroom and inventory system for high-end real estate investments.",
+  title: "Lebanon Buyers | Premium Real Estate Investment",
+  description: "Luxury digital showroom and inventory system for high-end real estate investments in Lebanon.",
 };
 
 export default function RootLayout({ children }) {
@@ -13,13 +12,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="antialiased">
         <AuthProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </AuthProvider>
       </body>
     </html>

@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // GLOBAL HELPERS
+    // ==========================================
+    
+    // Check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the user is the specific Admin
+    // IMPORTANT: Replace 'info@lebanonbuyers.com' with your actual admin email
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'info@lebanonbuyers.com';
+    }
+
+    // ==========================================
+    // COLLECTION RULES
+    // ==========================================
+
+    // 1. Properties Collection
+    // - Anyone can view properties
+    // - Only Admin can create, update, or delete
+    match /properties/{propertyId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 2. Website Content (Homepage, About, Contact, etc.)
+    // - Anyone can read the content to see the website
+    // - Only Admin can change the text/images via the settings
+    match /content/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Inquiries / Contact Form Messages
+    // - Anyone can send a message (create)
+    // - Only Admin can read or manage these messages
+    match /inquiries/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 4. Comments / Feedback (Future Proofing)
+    // - Anyone can read comments
+    // - Authenticated users can create comments
+    // - Only Admin can delete or moderate
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // 5. User Profiles (If you add client accounts later)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
+    }
+
+    // ==========================================
+    // DEFAULT DENY
+    // ==========================================
+    // Block everything else by default for security
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

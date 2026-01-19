@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FiUpload, FiX, FiPlus, FiSave, FiAlertCircle } from 'react-icons/fi';
-import { ref, push, set } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function AddProperty() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [images, setImages] = useState([]);
+    const [propertyTypes, setPropertyTypes] = useState(['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Commercial', 'Land']);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -25,7 +26,16 @@ export default function AddProperty() {
         status: 'Acquired',
     });
 
-    const propertyTypes = ['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Commercial', 'Land'];
+    useEffect(() => {
+        const metadataRef = doc(db, 'content', 'metadata');
+        const unsubscribe = onSnapshot(metadataRef, (snapshot) => {
+            if (snapshot.exists() && snapshot.data().propertyTypes) {
+                setPropertyTypes(snapshot.data().propertyTypes);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
     const statuses = ['Acquired', 'For Sale', 'Sold'];
 
     const handleInputChange = (e) => {
@@ -76,20 +86,17 @@ export default function AddProperty() {
         }
 
         try {
-            const propertiesRef = ref(database, 'properties');
-            const newPropertyRef = push(propertiesRef);
-
             const propertyData = {
                 ...formData,
                 images,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
                 profit: Number(formData.sellingPrice) - Number(formData.acquisitionPrice),
                 roi: ((Number(formData.sellingPrice) - Number(formData.acquisitionPrice)) / Number(formData.acquisitionPrice) * 100).toFixed(2),
             };
 
-            await set(newPropertyRef, propertyData);
-            router.push('/admin/inventory');
+            await addDoc(collection(db, 'properties'), propertyData);
+            router.push('/adminofthepage/inventory');
         } catch (err) {
             setError('Failed to add property: ' + err.message);
         } finally {

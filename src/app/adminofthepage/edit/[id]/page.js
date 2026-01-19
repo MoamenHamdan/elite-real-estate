@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FiUpload, FiX, FiSave, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
-import { ref, onValue, update } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { doc, getDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function EditProperty() {
     const { id } = useParams();
@@ -14,6 +14,7 @@ export default function EditProperty() {
     const [fetching, setFetching] = useState(true);
     const [error, setError] = useState('');
     const [images, setImages] = useState([]);
+    const [propertyTypes, setPropertyTypes] = useState(['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Commercial', 'Land']);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -27,30 +28,47 @@ export default function EditProperty() {
         status: 'Acquired',
     });
 
-    const propertyTypes = ['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Commercial', 'Land'];
     const statuses = ['Acquired', 'For Sale', 'Sold'];
 
     useEffect(() => {
-        const propertyRef = ref(database, `properties/${id}`);
-        onValue(propertyRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                setFormData({
-                    title: data.title || '',
-                    description: data.description || '',
-                    location: data.location || '',
-                    type: data.type || 'Apartment',
-                    size: data.size || '',
-                    bedrooms: data.bedrooms || '',
-                    bathrooms: data.bathrooms || '',
-                    acquisitionPrice: data.acquisitionPrice || '',
-                    sellingPrice: data.sellingPrice || '',
-                    status: data.status || 'Acquired',
-                });
-                setImages(data.images || []);
+        // Fetch Property Types
+        const metadataRef = doc(db, 'content', 'metadata');
+        const unsubscribeTypes = onSnapshot(metadataRef, (snapshot) => {
+            if (snapshot.exists() && snapshot.data().propertyTypes) {
+                setPropertyTypes(snapshot.data().propertyTypes);
             }
-            setFetching(false);
-        }, { onlyOnce: true });
+        });
+
+        // Fetch Property Data
+        const fetchProperty = async () => {
+            try {
+                const docRef = doc(db, 'properties', id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setFormData({
+                        title: data.title || '',
+                        description: data.description || '',
+                        location: data.location || '',
+                        type: data.type || 'Apartment',
+                        size: data.size || '',
+                        bedrooms: data.bedrooms || '',
+                        bathrooms: data.bathrooms || '',
+                        acquisitionPrice: data.acquisitionPrice || '',
+                        sellingPrice: data.sellingPrice || '',
+                        status: data.status || 'Acquired',
+                    });
+                    setImages(data.images || []);
+                }
+            } catch (err) {
+                setError('Failed to fetch property details');
+            } finally {
+                setFetching(false);
+            }
+        };
+        fetchProperty();
+
+        return () => unsubscribeTypes();
     }, [id]);
 
     const handleInputChange = (e) => {
@@ -83,17 +101,17 @@ export default function EditProperty() {
         setError('');
 
         try {
-            const propertyRef = ref(database, `properties/${id}`);
+            const propertyRef = doc(db, 'properties', id);
             const propertyData = {
                 ...formData,
                 images,
-                updatedAt: new Date().toISOString(),
+                updatedAt: serverTimestamp(),
                 profit: Number(formData.sellingPrice) - Number(formData.acquisitionPrice),
                 roi: ((Number(formData.sellingPrice) - Number(formData.acquisitionPrice)) / Number(formData.acquisitionPrice) * 100).toFixed(2),
             };
 
-            await update(propertyRef, propertyData);
-            router.push('/admin/inventory');
+            await updateDoc(propertyRef, propertyData);
+            router.push('/adminofthepage/inventory');
         } catch (err) {
             setError('Failed to update property: ' + err.message);
         } finally {

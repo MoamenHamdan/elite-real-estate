@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { FiMapPin, FiMaximize, FiBox, FiDroplet, FiCalendar, FiArrowLeft, FiCheck } from 'react-icons/fi';
-import { ref, onValue } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    FiMapPin, FiMaximize, FiBox, FiDroplet, FiArrowLeft,
+    FiCheckCircle, FiCalendar, FiTrendingUp, FiDollarSign,
+    FiChevronLeft, FiChevronRight, FiDownload, FiShare2
+} from 'react-icons/fi';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import Link from 'next/link';
 
 export default function PropertyDetails() {
     const { id } = useParams();
@@ -14,34 +18,43 @@ export default function PropertyDetails() {
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(0);
+    const [amenities, setAmenities] = useState([
+        "Premium Interior Finishes", "Smart Home Integration",
+        "Energy Efficient Systems", "Private Outdoor Space",
+        "High-Security Access", "Concierge Services"
+    ]);
 
     useEffect(() => {
-        const propertyRef = ref(database, `properties/${id}`);
-        onValue(propertyRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                setProperty(data);
+        const unsubProperty = onSnapshot(doc(db, 'properties', id), (snapshot) => {
+            if (snapshot.exists()) {
+                setProperty({ id: snapshot.id, ...snapshot.data() });
+            } else {
+                router.push('/properties');
             }
             setLoading(false);
         });
-    }, [id]);
+
+        const unsubMetadata = onSnapshot(doc(db, 'content', 'metadata'), (snapshot) => {
+            if (snapshot.exists() && snapshot.data().amenities) {
+                setAmenities(snapshot.data().amenities);
+            }
+        });
+
+        return () => {
+            unsubProperty();
+            unsubMetadata();
+        };
+    }, [id, router]);
 
     if (loading) {
         return (
-            <div className="pt-32 pb-24 min-h-screen flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen flex items-center justify-center bg-light">
+                <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
 
-    if (!property) {
-        return (
-            <div className="pt-32 pb-24 min-h-screen text-center">
-                <h2 className="text-3xl font-bold mb-4">Property Not Found</h2>
-                <button onClick={() => router.push('/properties')} className="btn-primary">Back to Inventory</button>
-            </div>
-        );
-    }
+    if (!property) return null;
 
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('en-US', {
@@ -52,158 +65,201 @@ export default function PropertyDetails() {
     };
 
     return (
-        <div className="pt-32 pb-24 bg-white">
-            <div className="container-custom">
-                {/* Navigation & Title */}
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-500 hover:text-accent mb-8 transition-colors"
-                >
-                    <FiArrowLeft /> Back to Properties
-                </button>
+        <div className="bg-light min-h-screen pb-24">
+            {/* Hero Gallery Section */}
+            <section className="relative h-[85vh] bg-primary overflow-hidden">
+                <AnimatePresence mode="wait">
+                    <motion.img
+                        key={activeImage}
+                        initial={{ opacity: 0, scale: 1.1 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        src={property.images[activeImage]}
+                        className="w-full h-full object-cover brightness-[0.7]"
+                        alt={property.title}
+                    />
+                </AnimatePresence>
 
-                <div className="flex flex-col lg:flex-row justify-between items-start gap-8 mb-12">
-                    <div>
-                        <div className="flex gap-3 mb-4">
-                            <span className="px-3 py-1 bg-accent/10 text-accent text-xs font-bold uppercase tracking-wider rounded">
-                                {property.type}
-                            </span>
-                            <span className={`px-3 py-1 text-white text-xs font-bold uppercase tracking-wider rounded ${property.status === 'For Sale' ? 'bg-success' : 'bg-primary'
-                                }`}>
-                                {property.status}
-                            </span>
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">{property.title}</h1>
-                        <div className="flex items-center gap-2 text-gray-500 text-lg">
-                            <FiMapPin className="text-accent" />
-                            <span>{property.location}</span>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm text-gray-400 uppercase font-bold tracking-widest mb-1">Investment Price</p>
-                        <p className="text-4xl font-bold text-primary">{formatCurrency(property.sellingPrice)}</p>
-                    </div>
-                </div>
+                {/* Navigation Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80"></div>
 
-                {/* Image Gallery */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-16">
-                    <div className="lg:col-span-3 relative aspect-[16/9] rounded-3xl overflow-hidden shadow-luxury">
-                        <Image
-                            src={property.images?.[activeImage] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=2070&auto=format&fit=crop'}
-                            alt={property.title}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <div className="flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto max-h-[600px] pb-4 lg:pb-0">
-                        {property.images?.map((img, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setActiveImage(index)}
-                                className={`relative flex-shrink-0 w-32 lg:w-full aspect-square rounded-2xl overflow-hidden border-4 transition-all ${activeImage === index ? 'border-accent shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'
-                                    }`}
-                            >
-                                <Image src={img} alt="" fill className="object-cover" />
+                <div className="absolute top-32 left-0 right-0 z-10">
+                    <div className="container-custom">
+                        <Link href="/properties">
+                            <button className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold uppercase tracking-widest text-sm">
+                                <FiArrowLeft /> Back to Inventory
                             </button>
-                        ))}
+                        </Link>
                     </div>
                 </div>
 
-                {/* Property Details Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-                    <div className="lg:col-span-2 space-y-12">
-                        {/* Overview */}
-                        <section>
-                            <h3 className="text-2xl font-bold mb-6 border-b border-gray-100 pb-4">Property Overview</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-accent">
-                                        <FiMaximize /> <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Size</span>
-                                    </div>
-                                    <p className="text-lg font-bold">{property.size} sqm</p>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-accent">
-                                        <FiBox /> <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Bedrooms</span>
-                                    </div>
-                                    <p className="text-lg font-bold">{property.bedrooms}</p>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-accent">
-                                        <FiDroplet /> <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Bathrooms</span>
-                                    </div>
-                                    <p className="text-lg font-bold">{property.bathrooms}</p>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-2 text-accent">
-                                        <FiCalendar /> <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Listed</span>
-                                    </div>
-                                    <p className="text-lg font-bold">{new Date(property.createdAt).toLocaleDateString()}</p>
-                                </div>
+                <div className="absolute bottom-12 left-0 right-0 z-10">
+                    <div className="container-custom">
+                        <div className="flex flex-col md:flex-row justify-between items-end gap-8">
+                            <div className="max-w-3xl">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex gap-3 mb-6"
+                                >
+                                    <span className="px-4 py-1.5 glass-dark text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
+                                        {property.type}
+                                    </span>
+                                    <span className="px-4 py-1.5 bg-accent text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
+                                        {property.status}
+                                    </span>
+                                </motion.div>
+                                <motion.h1
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight"
+                                >
+                                    {property.title}
+                                </motion.h1>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="flex items-center gap-3 text-gray-300 text-xl"
+                                >
+                                    <FiMapPin className="text-accent" />
+                                    {property.location}
+                                </motion.div>
                             </div>
-                        </section>
 
-                        {/* Description */}
-                        <section>
-                            <h3 className="text-2xl font-bold mb-6 border-b border-gray-100 pb-4">Description</h3>
-                            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-lg">
-                                {property.description}
-                            </p>
-                        </section>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="glass p-8 rounded-[2rem] min-w-[300px]"
+                            >
+                                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-2">Investment Value</p>
+                                <p className="text-5xl font-serif font-bold text-primary mb-6">
+                                    {formatCurrency(property.sellingPrice)}
+                                </p>
+                                <button className="btn-primary w-full !py-5">
+                                    Request Brochure
+                                </button>
+                            </motion.div>
+                        </div>
+                    </div>
+                </div>
 
-                        {/* Features/Amenities Placeholder */}
-                        <section>
-                            <h3 className="text-2xl font-bold mb-6 border-b border-gray-100 pb-4">Key Features</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Image Thumbnails */}
+                <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 z-20">
+                    {property.images.map((img, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setActiveImage(i)}
+                            className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-500 ${activeImage === i ? 'border-accent scale-110 shadow-xl' : 'border-transparent opacity-50 hover:opacity-100'
+                                }`}
+                        >
+                            <img src={img} className="w-full h-full object-cover" alt="" />
+                        </button>
+                    ))}
+                </div>
+            </section>
+
+            {/* Content Section */}
+            <section className="pt-24">
+                <div className="container-custom">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+                        {/* Left Column: Details */}
+                        <div className="lg:col-span-8 space-y-16">
+                            {/* Specs Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                                 {[
-                                    'Premium Interior Finishes',
-                                    'Smart Home Integration',
-                                    'Energy Efficient Systems',
-                                    'Private Outdoor Space',
-                                    'High-Security Access',
-                                    'Concierge Services'
-                                ].map((feature, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-4 bg-light rounded-xl">
-                                        <div className="w-6 h-6 bg-accent/10 text-accent rounded-full flex items-center justify-center">
-                                            <FiCheck className="text-sm" />
-                                        </div>
-                                        <span className="font-medium text-primary">{feature}</span>
+                                    { label: 'Total Area', value: `${property.size} sqm`, icon: <FiMaximize /> },
+                                    { label: 'Bedrooms', value: property.bedrooms, icon: <FiBox /> },
+                                    { label: 'Bathrooms', value: property.bathrooms, icon: <FiDroplet /> },
+                                    { label: 'Built Year', value: '2023', icon: <FiCalendar /> }
+                                ].map((spec, i) => (
+                                    <div key={i} className="bg-white p-8 rounded-[2rem] shadow-luxury border border-gray-50">
+                                        <div className="text-accent text-2xl mb-4">{spec.icon}</div>
+                                        <div className="text-2xl font-bold text-primary mb-1">{spec.value}</div>
+                                        <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">{spec.label}</div>
                                     </div>
                                 ))}
                             </div>
-                        </section>
-                    </div>
 
-                    {/* Sidebar Info */}
-                    <div className="space-y-8">
-                        <div className="bg-primary text-white p-8 rounded-3xl shadow-2xl sticky top-32">
-                            <h3 className="text-2xl font-bold mb-6">Investment Inquiry</h3>
-                            <p className="text-gray-300 mb-8">
-                                This property is part of our exclusive portfolio. For acquisition inquiries, please contact our investment team directly.
-                            </p>
-
-                            <div className="space-y-4 mb-8">
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                    <p className="text-xs text-gray-400 uppercase font-bold mb-1">Status</p>
-                                    <p className="font-bold text-accent">{property.status}</p>
-                                </div>
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                    <p className="text-xs text-gray-400 uppercase font-bold mb-1">Reference ID</p>
-                                    <p className="font-bold">{id.substring(0, 8).toUpperCase()}</p>
+                            {/* Description */}
+                            <div className="bg-white p-12 rounded-[3rem] shadow-luxury border border-gray-50">
+                                <h2 className="text-3xl font-serif font-bold mb-8">Investment <span className="text-accent">Overview</span></h2>
+                                <div className="prose prose-xl max-w-none text-gray-500 leading-relaxed">
+                                    {property.description.split('\n').map((para, i) => (
+                                        <p key={i} className="mb-6">{para}</p>
+                                    ))}
                                 </div>
                             </div>
 
-                            <button className="w-full btn-primary py-5 text-lg">
-                                Request Brochure
-                            </button>
+                            {/* Amenities */}
+                            <div className="bg-white p-12 rounded-[3rem] shadow-luxury border border-gray-50">
+                                <h2 className="text-3xl font-serif font-bold mb-8">Key <span className="text-accent">Features</span></h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {amenities.map((amenity, i) => (
+                                        <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-light group hover:bg-accent transition-all duration-500">
+                                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-accent group-hover:text-primary transition-colors">
+                                                <FiCheckCircle />
+                                            </div>
+                                            <span className="font-bold text-gray-600 group-hover:text-white transition-colors">{amenity}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
 
-                            <p className="text-center text-xs text-gray-500 mt-6">
-                                * No direct online transactions. All acquisitions are handled through our legal department.
-                            </p>
+                        {/* Right Column: Investment Analysis */}
+                        <div className="lg:col-span-4 space-y-8">
+                            <div className="sticky top-32">
+                                <div className="bg-primary text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+
+                                    <h3 className="text-2xl font-serif font-bold mb-8">Investment Analysis</h3>
+
+                                    <div className="space-y-8 mb-12">
+                                        <div className="flex justify-between items-end border-b border-white/10 pb-6">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Projected ROI</p>
+                                                <p className="text-4xl font-bold text-accent">{property.roi}%</p>
+                                            </div>
+                                            <FiTrendingUp className="text-4xl text-accent/20" />
+                                        </div>
+                                        <div className="flex justify-between items-end border-b border-white/10 pb-6">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Estimated Profit</p>
+                                                <p className="text-4xl font-bold text-white">{formatCurrency(property.profit)}</p>
+                                            </div>
+                                            <FiDollarSign className="text-4xl text-accent/20" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <button className="btn-primary w-full !py-5 flex items-center justify-center gap-3">
+                                            <FiDownload /> Download Prospectus
+                                        </button>
+                                        <button className="w-full py-5 border border-white/20 rounded-full font-bold hover:bg-white/5 transition-all flex items-center justify-center gap-3">
+                                            <FiShare2 /> Share Opportunity
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 p-8 bg-white rounded-[2rem] shadow-luxury border border-gray-50 flex items-center gap-6">
+                                    <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center text-white text-2xl font-serif font-bold">
+                                        MK
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Investment Advisor</p>
+                                        <p className="text-lg font-bold text-primary">Mohamad Kaydouh</p>
+                                        <button className="text-accent text-sm font-bold hover:underline">Contact Advisor</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     );
 }

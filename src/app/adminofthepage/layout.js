@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { FiPlus, FiGrid, FiTrendingUp, FiSettings, FiLogOut, FiHome, FiDollarSign, FiPieChart } from 'react-icons/fi';
+import { FiPlus, FiGrid, FiTrendingUp, FiSettings, FiLogOut, FiHome, FiDollarSign, FiPieChart, FiList } from 'react-icons/fi';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }) {
@@ -29,11 +29,10 @@ export default function AdminLayout({ children }) {
     if (!user || !isAdmin) return null;
 
     const menuItems = [
-        { icon: FiGrid, label: 'Dashboard', href: '/admin' },
-        { icon: FiPlus, label: 'Add Property', href: '/admin/add' },
-        { icon: FiHome, label: 'Inventory', href: '/admin/inventory' },
-        { icon: FiPieChart, label: 'Analytics', href: '/admin/analytics' },
-        { icon: FiSettings, label: 'Settings', href: '/admin/settings' },
+        { id: 'dashboard', label: 'Dashboard', icon: FiPieChart, href: '/adminofthepage' },
+        { id: 'inventory', label: 'Inventory', icon: FiList, href: '/adminofthepage/inventory' },
+        { id: 'add', label: 'Add Property', icon: FiPlus, href: '/adminofthepage/add' },
+        { id: 'settings', label: 'Platform Settings', icon: FiSettings, href: '/adminofthepage/settings' },
     ];
 
     return (
@@ -47,7 +46,7 @@ export default function AdminLayout({ children }) {
                 <div className="p-6 flex items-center justify-between">
                     {isSidebarOpen && (
                         <h1 className="text-xl font-bold font-serif">
-                            Elite <span className="text-accent">Admin</span>
+                            Lebanon <span className="text-accent">Buyers</span>
                         </h1>
                     )}
                     <button

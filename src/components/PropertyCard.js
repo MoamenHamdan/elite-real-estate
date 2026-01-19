@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FiMapPin, FiMaximize, FiBox, FiDroplet } from 'react-icons/fi';
+import { FiMapPin, FiMaximize, FiBox, FiDroplet, FiArrowRight } from 'react-icons/fi';
 
 const PropertyCard = ({ property }) => {
     const {
@@ -33,62 +33,75 @@ const PropertyCard = ({ property }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            whileHover={{ y: -10 }}
-            className="card group"
+            className="card group h-full flex flex-col"
         >
             {/* Image Section */}
-            <div className="relative h-72 overflow-hidden">
+            <div className="relative h-80 overflow-hidden">
                 <Image
                     src={mainImage}
                     alt={title}
                     fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="object-cover transition-transform duration-1000 group-hover:scale-110"
                 />
-                <div className="absolute top-4 left-4 flex gap-2">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-primary text-xs font-bold uppercase tracking-wider rounded">
+
+                {/* Badges */}
+                <div className="absolute top-6 left-6 flex flex-col gap-2">
+                    <span className="px-4 py-1.5 glass-dark text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
                         {type}
                     </span>
-                    <span className={`px-3 py-1 text-white text-xs font-bold uppercase tracking-wider rounded ${status === 'For Sale' ? 'bg-success' : 'bg-primary'
+                    <span className={`px-4 py-1.5 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full ${status === 'For Sale' ? 'bg-success' : 'bg-accent'
                         }`}>
                         {status}
                     </span>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
-                    <p className="text-2xl font-bold">{formatCurrency(sellingPrice)}</p>
+
+                {/* Price Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                    <p className="text-3xl font-serif font-bold text-white tracking-tight">
+                        {formatCurrency(sellingPrice)}
+                    </p>
                 </div>
             </div>
 
             {/* Content Section */}
-            <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 line-clamp-1 group-hover:text-accent transition-colors">
+            <div className="p-8 flex-grow flex flex-col">
+                <div className="flex items-center gap-2 text-accent mb-3">
+                    <FiMapPin size={14} />
+                    <span className="text-xs font-bold uppercase tracking-widest">{location}</span>
+                </div>
+
+                <h3 className="text-2xl font-serif font-bold mb-6 line-clamp-2 group-hover:text-accent transition-colors duration-300">
                     {title}
                 </h3>
-                <div className="flex items-center gap-2 text-gray-500 mb-6">
-                    <FiMapPin className="text-accent" />
-                    <span className="text-sm">{location}</span>
+
+                {/* Specs Grid */}
+                <div className="grid grid-cols-3 gap-4 py-6 border-y border-gray-50 mb-8">
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-light flex items-center justify-center text-gray-400 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                            <FiMaximize size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{size} sqm</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-light flex items-center justify-center text-gray-400 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                            <FiBox size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bedrooms} Beds</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-light flex items-center justify-center text-gray-400 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                            <FiDroplet size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bathrooms} Baths</span>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 border-t border-gray-100 pt-6">
-                    <div className="flex flex-col items-center gap-1">
-                        <FiMaximize className="text-gray-400" />
-                        <span className="text-xs font-semibold text-primary">{size} sqm</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                        <FiBox className="text-gray-400" />
-                        <span className="text-xs font-semibold text-primary">{bedrooms} Beds</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                        <FiDroplet className="text-gray-400" />
-                        <span className="text-xs font-semibold text-primary">{bathrooms} Baths</span>
-                    </div>
-                </div>
-
-                <Link href={`/properties/${id}`} className="block mt-6">
-                    <button className="w-full py-3 bg-light text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all duration-300">
-                        View Details
+                <Link href={`/properties/${id}`} className="mt-auto">
+                    <button className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-accent transition-all duration-500 flex items-center justify-center gap-3 group/btn">
+                        View Investment <FiArrowRight className="group-hover/btn:translate-x-2 transition-transform" />
                     </button>
                 </Link>
             </div>

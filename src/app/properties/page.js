@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiFilter, FiX } from 'react-icons/fi';
-import { ref, onValue } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { FiSearch, FiFilter, FiX, FiChevronDown, FiGrid, FiList } from 'react-icons/fi';
+import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import PropertyCard from '@/components/PropertyCard';
 
 export default function PropertiesPage() {
@@ -21,21 +21,24 @@ export default function PropertiesPage() {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     useEffect(() => {
-        const propertiesRef = ref(database, 'properties');
-        onValue(propertiesRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const propertyList = Object.entries(data).map(([id, value]) => ({
-                    id,
-                    ...value,
-                })).filter(p => p.status !== 'Acquired'); // Only show For Sale and Sold
-                setProperties(propertyList);
-            }
+        const q = query(
+            collection(db, 'properties'),
+            where('status', 'in', ['For Sale', 'Sold']),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const propertyList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setProperties(propertyList);
             setLoading(false);
         });
+
+        return () => unsubscribe();
     }, []);
 
-    // Dynamic filter options generated from data
     const filterOptions = useMemo(() => {
         const types = ['All', ...new Set(properties.map(p => p.type))];
         const locations = ['All', ...new Set(properties.map(p => p.location))];
@@ -66,24 +69,45 @@ export default function PropertiesPage() {
     }, [properties, searchQuery, filters]);
 
     return (
-        <div className="pt-32 pb-24 bg-light min-h-screen">
+        <div className="pt-40 pb-24 bg-light min-h-screen">
             <div className="container-custom">
                 {/* Header */}
-                <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">Our <span className="text-accent">Inventory</span></h1>
-                    <p className="text-gray-500 text-lg">Discover exclusive investment opportunities in our curated portfolio.</p>
+                <div className="max-w-4xl mb-16">
+                    <motion.span
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-accent font-bold tracking-[0.3em] uppercase mb-4 block"
+                    >
+                        Exclusive Inventory
+                    </motion.span>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-5xl md:text-7xl font-serif font-bold mb-6"
+                    >
+                        Curated <span className="text-accent">Investments</span>
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-xl text-gray-500 leading-relaxed"
+                    >
+                        Explore our elite portfolio of high-yield real estate assets, meticulously selected for their architectural excellence and strategic potential.
+                    </motion.p>
                 </div>
 
                 {/* Search & Filter Bar */}
-                <div className="bg-white p-6 rounded-2xl shadow-luxury mb-12">
+                <div className="mb-16">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Search Input */}
-                        <div className="flex-grow relative">
-                            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+                        <div className="flex-grow relative group">
+                            <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 text-xl group-focus-within:text-accent transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Search by title, location, or features..."
-                                className="w-full pl-12 pr-4 py-4 bg-light border-none rounded-xl focus:ring-2 focus:ring-accent/20 transition-all outline-none"
+                                className="w-full pl-16 pr-6 py-6 bg-white rounded-[2rem] shadow-luxury border border-transparent focus:border-accent/20 outline-none transition-all text-lg"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -91,40 +115,33 @@ export default function PropertiesPage() {
 
                         {/* Desktop Filters */}
                         <div className="hidden lg:flex items-center gap-4">
-                            <select
-                                className="px-4 py-4 bg-light rounded-xl border-none focus:ring-2 focus:ring-accent/20 outline-none cursor-pointer"
-                                value={filters.type}
-                                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                            >
-                                <option value="All">All Types</option>
-                                {filterOptions.types.filter(t => t !== 'All').map(t => (
-                                    <option key={t} value={t}>{t}</option>
+                            <div className="flex bg-white p-2 rounded-full shadow-luxury border border-gray-50">
+                                {['All', 'Under 1M', '1M - 5M', 'Over 5M'].map((range) => (
+                                    <button
+                                        key={range}
+                                        onClick={() => setFilters({ ...filters, priceRange: range })}
+                                        className={`px-6 py-3 rounded-full text-sm font-bold transition-all ${filters.priceRange === range
+                                                ? 'bg-primary text-white shadow-lg'
+                                                : 'text-gray-400 hover:text-primary'
+                                            }`}
+                                    >
+                                        {range === 'All' ? 'Any Price' : range}
+                                    </button>
                                 ))}
-                            </select>
-
-                            <select
-                                className="px-4 py-4 bg-light rounded-xl border-none focus:ring-2 focus:ring-accent/20 outline-none cursor-pointer"
-                                value={filters.priceRange}
-                                onChange={(e) => setFilters({ ...filters, priceRange: e.target.value })}
-                            >
-                                <option value="All">Any Price</option>
-                                <option value="Under 1M">Under $1M</option>
-                                <option value="1M - 5M">$1M - $5M</option>
-                                <option value="Over 5M">Over $5M</option>
-                            </select>
+                            </div>
 
                             <button
                                 onClick={() => setShowMobileFilters(true)}
-                                className="flex items-center gap-2 px-6 py-4 bg-primary text-white rounded-xl hover:bg-primary-light transition-all"
+                                className="flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-full font-bold hover:bg-accent-hover transition-all shadow-lg shadow-accent/20"
                             >
-                                <FiFilter /> More Filters
+                                <FiFilter /> Advanced Filters
                             </button>
                         </div>
 
                         {/* Mobile Filter Toggle */}
                         <button
                             onClick={() => setShowMobileFilters(true)}
-                            className="lg:hidden flex items-center justify-center gap-2 px-6 py-4 bg-primary text-white rounded-xl"
+                            className="lg:hidden flex items-center justify-center gap-3 px-8 py-5 bg-primary text-white rounded-2xl font-bold"
                         >
                             <FiFilter /> Filters
                         </button>
@@ -133,13 +150,13 @@ export default function PropertiesPage() {
 
                 {/* Results Grid */}
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="h-[500px] rounded-2xl skeleton"></div>
+                            <div key={i} className="h-[600px] rounded-[2rem] bg-white animate-pulse border border-gray-100"></div>
                         ))}
                     </div>
                 ) : filteredProperties.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         <AnimatePresence mode="popLayout">
                             {filteredProperties.map((property) => (
                                 <PropertyCard key={property.id} property={property} />
@@ -147,12 +164,16 @@ export default function PropertiesPage() {
                         </AnimatePresence>
                     </div>
                 ) : (
-                    <div className="text-center py-24 bg-white rounded-2xl shadow-luxury">
-                        <div className="text-6xl text-gray-200 mb-6 flex justify-center">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-32 bg-white rounded-[3rem] shadow-luxury border border-gray-50"
+                    >
+                        <div className="w-24 h-24 bg-light rounded-full flex items-center justify-center text-gray-300 text-5xl mx-auto mb-8">
                             <FiSearch />
                         </div>
-                        <h3 className="text-2xl font-bold mb-2">No properties found</h3>
-                        <p className="text-gray-500 mb-8">Try adjusting your search or filters to find what you're looking for.</p>
+                        <h3 className="text-3xl font-serif font-bold mb-4">No matching investments</h3>
+                        <p className="text-xl text-gray-500 mb-12 max-w-md mx-auto">Try adjusting your criteria to discover other premium opportunities in our portfolio.</p>
                         <button
                             onClick={() => {
                                 setSearchQuery('');
@@ -164,11 +185,11 @@ export default function PropertiesPage() {
                                     minBedrooms: 'All',
                                 });
                             }}
-                            className="btn-primary"
+                            className="btn-primary !px-12"
                         >
-                            Clear All Filters
+                            Reset All Filters
                         </button>
-                    </div>
+                    </motion.div>
                 )}
             </div>
 
@@ -181,36 +202,36 @@ export default function PropertiesPage() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setShowMobileFilters(false)}
-                            className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+                            className="fixed inset-0 bg-primary/40 z-[60] backdrop-blur-md"
                         />
                         <motion.div
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[70] p-8 overflow-y-auto"
+                            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                            className="fixed top-0 right-0 bottom-0 w-full max-w-lg bg-white z-[70] p-12 overflow-y-auto rounded-l-[3rem] shadow-2xl"
                         >
-                            <div className="flex justify-between items-center mb-12">
-                                <h2 className="text-2xl font-bold">Filters</h2>
+                            <div className="flex justify-between items-center mb-16">
+                                <h2 className="text-4xl font-serif font-bold">Refine <span className="text-accent">Search</span></h2>
                                 <button
                                     onClick={() => setShowMobileFilters(false)}
-                                    className="p-2 hover:bg-light rounded-full transition-all"
+                                    className="w-12 h-12 flex items-center justify-center bg-light rounded-full hover:bg-gray-200 transition-all"
                                 >
                                     <FiX className="text-2xl" />
                                 </button>
                             </div>
 
-                            <div className="space-y-8">
+                            <div className="space-y-12">
                                 <div>
-                                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Property Type</label>
+                                    <label className="block text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Property Type</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         {filterOptions.types.map(t => (
                                             <button
                                                 key={t}
                                                 onClick={() => setFilters({ ...filters, type: t })}
-                                                className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${filters.type === t
-                                                        ? 'bg-accent text-white'
-                                                        : 'bg-light text-primary hover:bg-gray-200'
+                                                className={`px-6 py-4 rounded-2xl text-sm font-bold transition-all ${filters.type === t
+                                                    ? 'bg-primary text-white shadow-xl'
+                                                    : 'bg-light text-primary hover:bg-gray-200'
                                                     }`}
                                             >
                                                 {t}
@@ -220,9 +241,9 @@ export default function PropertiesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Location</label>
+                                    <label className="block text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Location</label>
                                     <select
-                                        className="w-full px-4 py-4 bg-light rounded-xl border-none outline-none"
+                                        className="input-field !bg-light !border-transparent"
                                         value={filters.location}
                                         onChange={(e) => setFilters({ ...filters, location: e.target.value })}
                                     >
@@ -233,29 +254,33 @@ export default function PropertiesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Price Range</label>
-                                    <select
-                                        className="w-full px-4 py-4 bg-light rounded-xl border-none outline-none"
-                                        value={filters.priceRange}
-                                        onChange={(e) => setFilters({ ...filters, priceRange: e.target.value })}
-                                    >
-                                        <option value="All">Any Price</option>
-                                        <option value="Under 1M">Under $1M</option>
-                                        <option value="1M - 5M">$1M - $5M</option>
-                                        <option value="Over 5M">Over $5M</option>
-                                    </select>
+                                    <label className="block text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Price Range</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {['All', 'Under 1M', '1M - 5M', 'Over 5M'].map(range => (
+                                            <button
+                                                key={range}
+                                                onClick={() => setFilters({ ...filters, priceRange: range })}
+                                                className={`px-6 py-4 rounded-2xl text-sm font-bold transition-all ${filters.priceRange === range
+                                                    ? 'bg-primary text-white shadow-xl'
+                                                    : 'bg-light text-primary hover:bg-gray-200'
+                                                    }`}
+                                            >
+                                                {range}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Minimum Bedrooms</label>
+                                    <label className="block text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Minimum Bedrooms</label>
                                     <div className="flex gap-3">
                                         {['All', '1', '2', '3', '4', '5+'].map(n => (
                                             <button
                                                 key={n}
                                                 onClick={() => setFilters({ ...filters, minBedrooms: n })}
-                                                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${filters.minBedrooms === n
-                                                        ? 'bg-accent text-white'
-                                                        : 'bg-light text-primary hover:bg-gray-200'
+                                                className={`flex-1 py-4 rounded-2xl text-sm font-bold transition-all ${filters.minBedrooms === n
+                                                    ? 'bg-primary text-white shadow-xl'
+                                                    : 'bg-light text-primary hover:bg-gray-200'
                                                     }`}
                                             >
                                                 {n}
@@ -264,23 +289,28 @@ export default function PropertiesPage() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Minimum Size (sqm)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="e.g. 200"
-                                        className="w-full px-4 py-4 bg-light rounded-xl border-none outline-none"
-                                        value={filters.minSize}
-                                        onChange={(e) => setFilters({ ...filters, minSize: e.target.value })}
-                                    />
+                                <div className="pt-8">
+                                    <button
+                                        onClick={() => setShowMobileFilters(false)}
+                                        className="w-full btn-primary !py-6 !text-lg"
+                                    >
+                                        Show {filteredProperties.length} Results
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setFilters({
+                                                type: 'All',
+                                                location: 'All',
+                                                priceRange: 'All',
+                                                minSize: '',
+                                                minBedrooms: 'All',
+                                            });
+                                        }}
+                                        className="w-full mt-4 text-sm font-bold text-gray-400 hover:text-accent transition-colors"
+                                    >
+                                        Reset All Filters
+                                    </button>
                                 </div>
-
-                                <button
-                                    onClick={() => setShowMobileFilters(false)}
-                                    className="w-full btn-primary py-5 mt-8"
-                                >
-                                    Apply Filters
-                                </button>
                             </div>
                         </motion.div>
                     </>

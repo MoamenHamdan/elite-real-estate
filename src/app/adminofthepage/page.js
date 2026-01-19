@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiHome, FiDollarSign, FiTrendingUp, FiCheckCircle, FiClock, FiActivity } from 'react-icons/fi';
-import { ref, onValue } from 'firebase/database';
-import { database } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -19,41 +20,40 @@ export default function AdminDashboard() {
     const [recentProperties, setRecentProperties] = useState([]);
 
     useEffect(() => {
-        const propertiesRef = ref(database, 'properties');
-        onValue(propertiesRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const propertyList = Object.entries(data).map(([id, value]) => ({
-                    id,
-                    ...value,
-                }));
+        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const propertyList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+            }));
 
-                const total = propertyList.length;
-                const active = propertyList.filter(p => p.status === 'For Sale').length;
-                const sold = propertyList.filter(p => p.status === 'Sold').length;
+            const total = propertyList.length;
+            const active = propertyList.filter(p => p.status === 'For Sale').length;
+            const sold = propertyList.filter(p => p.status === 'Sold').length;
 
-                const investment = propertyList.reduce((acc, p) => acc + (Number(p.acquisitionPrice) || 0), 0);
-                const revenue = propertyList.filter(p => p.status === 'Sold').reduce((acc, p) => acc + (Number(p.sellingPrice) || 0), 0);
-                const profit = propertyList.filter(p => p.status === 'Sold').reduce((acc, p) => acc + (Number(p.sellingPrice) - Number(p.acquisitionPrice) || 0), 0);
+            const investment = propertyList.reduce((acc, p) => acc + (Number(p.acquisitionPrice) || 0), 0);
+            const revenue = propertyList.filter(p => p.status === 'Sold').reduce((acc, p) => acc + (Number(p.sellingPrice) || 0), 0);
+            const profit = propertyList.filter(p => p.status === 'Sold').reduce((acc, p) => acc + (Number(p.sellingPrice) - Number(p.acquisitionPrice) || 0), 0);
 
-                const soldProps = propertyList.filter(p => p.status === 'Sold');
-                const avgROI = soldProps.length > 0
-                    ? (soldProps.reduce((acc, p) => acc + ((Number(p.sellingPrice) - Number(p.acquisitionPrice)) / Number(p.acquisitionPrice) * 100), 0) / soldProps.length)
-                    : 0;
+            const soldProps = propertyList.filter(p => p.status === 'Sold');
+            const avgROI = soldProps.length > 0
+                ? (soldProps.reduce((acc, p) => acc + ((Number(p.sellingPrice) - Number(p.acquisitionPrice)) / Number(p.acquisitionPrice) * 100), 0) / soldProps.length)
+                : 0;
 
-                setStats({
-                    totalProperties: total,
-                    activeListings: active,
-                    soldProperties: sold,
-                    totalInvestment: investment,
-                    totalRevenue: revenue,
-                    totalProfit: profit,
-                    avgROI: avgROI,
-                });
+            setStats({
+                totalProperties: total,
+                activeListings: active,
+                soldProperties: sold,
+                totalInvestment: investment,
+                totalRevenue: revenue,
+                totalProfit: profit,
+                avgROI: avgROI,
+            });
 
-                setRecentProperties(propertyList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5));
-            }
+            setRecentProperties(propertyList.slice(0, 5));
         });
+        return () => unsubscribe();
     }, []);
 
     const formatCurrency = (value) => {
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-8">
                         <h3 className="text-xl font-bold text-primary">Recent Acquisitions</h3>
-                        <Link href="/admin/inventory" className="text-accent text-sm font-bold hover:underline">View All</Link>
+                        <Link href="/adminofthepage/inventory" className="text-accent text-sm font-bold hover:underline">View All</Link>
                     </div>
                     <div className="space-y-6">
                         {recentProperties.length > 0 ? recentProperties.map((prop) => (
