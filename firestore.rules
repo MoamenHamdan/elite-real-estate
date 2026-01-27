@@ -12,9 +12,11 @@ service cloud.firestore {
     }
 
     // Check if the user is the specific Admin
-    // IMPORTANT: Replace 'info@lebanonbuyers.com' with your actual admin email
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'info@lebanonbuyers.com';
+      return isAuthenticated() && (
+        request.auth.token.email == 'info@lebanonbuyers.com' || 
+        request.auth.token.email == 'moumenhamdan5@gmail.com'
+      );
     }
 
     // ==========================================
@@ -37,6 +39,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // 3. Team Collection
+    // - Anyone can view team members
+    // - Only Admin can manage team
+    match /team/{memberId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // 3. Inquiries / Contact Form Messages
     // - Anyone can send a message (create)
     // - Only Admin can read or manage these messages
@@ -45,13 +55,13 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
-    // 4. Comments / Feedback (Future Proofing)
-    // - Anyone can read comments
-    // - Authenticated users can create comments
+    // 4. Client Feedback / Reviews
+    // - Anyone can read approved feedback
+    // - Anyone can submit feedback (create)
     // - Only Admin can delete or moderate
-    match /comments/{commentId} {
+    match /feedback/{feedbackId} {
       allow read: if true;
-      allow create: if isAuthenticated();
+      allow create: if true;
       allow update, delete: if isAdmin();
     }
 

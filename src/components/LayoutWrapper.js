@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Background from "@/components/Background";
 
 export default function LayoutWrapper({ children }) {
     const pathname = usePathname();
@@ -14,7 +15,8 @@ export default function LayoutWrapper({ children }) {
     const hideLayout = isAdminRoute || isLoginPage;
 
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen relative">
+            <Background />
             {!hideLayout && <Navbar />}
             <main className="flex-grow">
                 {children}

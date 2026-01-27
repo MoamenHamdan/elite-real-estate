@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiFilter, FiX, FiChevronDown, FiGrid, FiList } from 'react-icons/fi';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
@@ -8,6 +9,7 @@ import { db } from '@/lib/firebase';
 import PropertyCard from '@/components/PropertyCard';
 
 export default function PropertiesPage() {
+    const searchParams = useSearchParams();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -16,28 +18,44 @@ export default function PropertiesPage() {
         location: 'All',
         priceRange: 'All',
         minSize: '',
+        maxSize: '',
         minBedrooms: 'All',
+        isHotDeal: false,
     });
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     useEffect(() => {
+        // Simplified query to avoid index requirement. 
+        // We filter status in memory for better immediate compatibility.
         const q = query(
             collection(db, 'properties'),
-            where('status', 'in', ['For Sale', 'Sold']),
             orderBy('createdAt', 'desc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const propertyList = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
+            const propertyList = snapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }))
+                .filter(p => ['For Sale', 'Sold'].includes(p.status));
+
             setProperties(propertyList);
+            setLoading(false);
+        }, (err) => {
+            console.error("Firestore error:", err);
             setLoading(false);
         });
 
         return () => unsubscribe();
     }, []);
+
+    useEffect(() => {
+        const filterParam = searchParams.get('filter');
+        if (filterParam === 'hot-deals') {
+            setFilters(prev => ({ ...prev, isHotDeal: true }));
+        }
+    }, [searchParams]);
 
     const filterOptions = useMemo(() => {
         const types = ['All', ...new Set(properties.map(p => p.type))];
@@ -49,22 +67,28 @@ export default function PropertiesPage() {
         return properties.filter(p => {
             const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.description.toLowerCase().includes(searchQuery.toLowerCase());
+                p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.size.toString().includes(searchQuery.toLowerCase());
 
             const matchesType = filters.type === 'All' || p.type === filters.type;
             const matchesLocation = filters.location === 'All' || p.location === filters.location;
             const matchesBedrooms = filters.minBedrooms === 'All' || Number(p.bedrooms) >= Number(filters.minBedrooms);
-            const matchesSize = !filters.minSize || Number(p.size) >= Number(filters.minSize);
+            const matchesSize = (!filters.minSize || Number(p.size) >= Number(filters.minSize)) &&
+                (!filters.maxSize || Number(p.size) <= Number(filters.maxSize));
+            const matchesHotDeal = !filters.isHotDeal || p.isHotDeal;
 
             let matchesPrice = true;
             if (filters.priceRange !== 'All') {
                 const price = Number(p.sellingPrice);
-                if (filters.priceRange === 'Under 1M') matchesPrice = price < 1000000;
-                else if (filters.priceRange === '1M - 5M') matchesPrice = price >= 1000000 && price <= 5000000;
-                else if (filters.priceRange === 'Over 5M') matchesPrice = price > 5000000;
+                if (filters.priceRange === 'Under 50k') matchesPrice = price < 50000;
+                else if (filters.priceRange === '50k - 100k') matchesPrice = price >= 50000 && price <= 100000;
+                else if (filters.priceRange === '100k - 150k') matchesPrice = price >= 100000 && price <= 150000;
+                else if (filters.priceRange === '150k - 200k') matchesPrice = price >= 150000 && price <= 200000;
+                else if (filters.priceRange === '200k - 500k') matchesPrice = price >= 200000 && price <= 500000;
+                else if (filters.priceRange === 'Over 500k') matchesPrice = price > 500000;
             }
 
-            return matchesSearch && matchesType && matchesLocation && matchesBedrooms && matchesSize && matchesPrice;
+            return matchesSearch && matchesType && matchesLocation && matchesBedrooms && matchesSize && matchesPrice && matchesHotDeal;
         });
     }, [properties, searchQuery, filters]);
 
@@ -106,35 +130,44 @@ export default function PropertiesPage() {
                             <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 text-xl group-focus-within:text-accent transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search by title, location, or features..."
+                                placeholder="Search by title, location, or size (e.g. 200 sqm)..."
                                 className="w-full pl-16 pr-6 py-6 bg-white rounded-[2rem] shadow-luxury border border-transparent focus:border-accent/20 outline-none transition-all text-lg"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
 
-                        {/* Desktop Filters */}
+                        {/* Desktop Filters - Hidden by default, shown when searching or via advanced button */}
                         <div className="hidden lg:flex items-center gap-4">
-                            <div className="flex bg-white p-2 rounded-full shadow-luxury border border-gray-50">
-                                {['All', 'Under 1M', '1M - 5M', 'Over 5M'].map((range) => (
-                                    <button
-                                        key={range}
-                                        onClick={() => setFilters({ ...filters, priceRange: range })}
-                                        className={`px-6 py-3 rounded-full text-sm font-bold transition-all ${filters.priceRange === range
-                                                ? 'bg-primary text-white shadow-lg'
-                                                : 'text-gray-400 hover:text-primary'
-                                            }`}
+                            <AnimatePresence>
+                                {(searchQuery.length > 0 || filters.priceRange !== 'All') && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        className="flex bg-white p-2 rounded-full shadow-luxury border border-gray-50 overflow-x-auto max-w-2xl"
                                     >
-                                        {range === 'All' ? 'Any Price' : range}
-                                    </button>
-                                ))}
-                            </div>
+                                        {['All', 'Under 50k', '50k - 100k', '100k - 150k', '150k - 200k', 'Over 200k'].map((range) => (
+                                            <button
+                                                key={range}
+                                                onClick={() => setFilters({ ...filters, priceRange: range })}
+                                                className={`px-6 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap ${filters.priceRange === range
+                                                    ? 'bg-primary text-white shadow-lg'
+                                                    : 'text-gray-400 hover:text-primary'
+                                                    }`}
+                                            >
+                                                {range === 'All' ? 'Any Price' : range}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <button
                                 onClick={() => setShowMobileFilters(true)}
-                                className="flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-full font-bold hover:bg-accent-hover transition-all shadow-lg shadow-accent/20"
+                                className="flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-full font-bold hover:bg-accent-hover transition-all shadow-lg shadow-accent/20 whitespace-nowrap"
                             >
-                                <FiFilter /> Advanced Filters
+                                <FiFilter /> {searchQuery.length > 0 ? 'More Filters' : 'Advanced Search'}
                             </button>
                         </div>
 
@@ -179,10 +212,11 @@ export default function PropertiesPage() {
                                 setSearchQuery('');
                                 setFilters({
                                     type: 'All',
-                                    location: 'All',
                                     priceRange: 'All',
                                     minSize: '',
+                                    maxSize: '',
                                     minBedrooms: 'All',
+                                    isHotDeal: false,
                                 });
                             }}
                             className="btn-primary !px-12"
@@ -256,7 +290,7 @@ export default function PropertiesPage() {
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Price Range</label>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {['All', 'Under 1M', '1M - 5M', 'Over 5M'].map(range => (
+                                        {['All', 'Under 50k', '50k - 100k', '100k - 150k', '150k - 200k', '200k - 500k', 'Over 500k'].map(range => (
                                             <button
                                                 key={range}
                                                 onClick={() => setFilters({ ...filters, priceRange: range })}
@@ -268,6 +302,27 @@ export default function PropertiesPage() {
                                                 {range}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-6">Size Range (sqm)</label>
+                                    <div className="flex gap-4 items-center">
+                                        <input
+                                            type="number"
+                                            placeholder="Min"
+                                            value={filters.minSize}
+                                            onChange={(e) => setFilters({ ...filters, minSize: e.target.value })}
+                                            className="input-field !bg-light !border-transparent w-full"
+                                        />
+                                        <span className="text-gray-400">-</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Max"
+                                            value={filters.maxSize}
+                                            onChange={(e) => setFilters({ ...filters, maxSize: e.target.value })}
+                                            className="input-field !bg-light !border-transparent w-full"
+                                        />
                                     </div>
                                 </div>
 
@@ -303,7 +358,9 @@ export default function PropertiesPage() {
                                                 location: 'All',
                                                 priceRange: 'All',
                                                 minSize: '',
+                                                maxSize: '',
                                                 minBedrooms: 'All',
+                                                isHotDeal: false,
                                             });
                                         }}
                                         className="w-full mt-4 text-sm font-bold text-gray-400 hover:text-accent transition-colors"

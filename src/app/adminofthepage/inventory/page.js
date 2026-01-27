@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiEdit2, FiTrash2, FiEye, FiSearch, FiPlus, FiAlertCircle } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiEye, FiSearch, FiPlus, FiAlertCircle, FiStar } from 'react-icons/fi';
 import { collection, onSnapshot, doc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
@@ -115,7 +115,10 @@ export default function InventoryPage() {
                                                     {prop.images?.[0] && <img src={prop.images[0]} alt="" className="w-full h-full object-cover" />}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-primary line-clamp-1">{prop.title}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-primary line-clamp-1">{prop.title}</p>
+                                                        {prop.isHotDeal && <FiStar className="text-accent fill-accent" size={14} title="Hot Deal" />}
+                                                    </div>
                                                     <p className="text-xs text-gray-400">{prop.location}</p>
                                                 </div>
                                             </div>

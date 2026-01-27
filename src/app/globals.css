@@ -12,6 +12,9 @@
   --color-light: #f8f9fa;
   --color-success: #10b981;
   --color-error: #ef4444;
+  --color-navy: #0f172a;
+  /* New Professional Color */
+  --color-navy-light: #1e293b;
 
   /* Typography */
   --font-serif: "Playfair Display", serif;
@@ -30,6 +33,9 @@
   --background-image-gradient-accent: linear-gradient(135deg, #c9a961 0%, #b89750 100%);
   --background-image-gradient-dark: linear-gradient(180deg, #161618 0%, #0a0a0b 100%);
   --background-image-gradient-gold: linear-gradient(135deg, #dfc48c 0%, #c9a961 100%);
+  --background-image-gradient-mesh: radial-gradient(at 0% 0%, hsla(222, 47%, 11%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(43, 52%, 58%, 0.1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(222, 47%, 11%, 1) 0, transparent 50%);
 }
 
 /* Base Styles */
@@ -123,6 +129,34 @@
 }
 
 /* Animations */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 60s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 60s linear infinite;
+}
+
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -141,15 +175,25 @@
   animation: float 6s ease-in-out infinite;
 }
 
+/* Custom Selection */
+::selection {
+  @apply bg-accent/30 text-primary;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-light;
+  @apply bg-primary;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full hover:bg-accent transition-colors;
+  @apply bg-accent/20 rounded-full border-2 border-primary hover:bg-accent transition-colors;
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
 }

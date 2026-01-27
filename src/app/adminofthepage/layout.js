@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { FiPlus, FiGrid, FiTrendingUp, FiSettings, FiLogOut, FiHome, FiDollarSign, FiPieChart, FiList } from 'react-icons/fi';
+import { FiPlus, FiGrid, FiTrendingUp, FiSettings, FiLogOut, FiHome, FiDollarSign, FiPieChart, FiList, FiUsers } from 'react-icons/fi';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }) {
@@ -32,6 +32,7 @@ export default function AdminLayout({ children }) {
         { id: 'dashboard', label: 'Dashboard', icon: FiPieChart, href: '/adminofthepage' },
         { id: 'inventory', label: 'Inventory', icon: FiList, href: '/adminofthepage/inventory' },
         { id: 'add', label: 'Add Property', icon: FiPlus, href: '/adminofthepage/add' },
+        { id: 'team', label: 'Manage Team', icon: FiUsers, href: '/adminofthepage/team' },
         { id: 'settings', label: 'Platform Settings', icon: FiSettings, href: '/adminofthepage/settings' },
     ];
 

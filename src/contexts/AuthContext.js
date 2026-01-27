@@ -24,8 +24,12 @@ export const AuthProvider = ({ children }) => {
             if (user) {
                 setUser(user);
                 // Check if user is admin based on email
-                const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-                setIsAdmin(user.email === adminEmail);
+                const adminEmails = [
+                    process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+                    'info@lebanonbuyers.com',
+                    'moumenhamdan5@gmail.com'
+                ];
+                setIsAdmin(adminEmails.includes(user.email));
             } else {
                 setUser(null);
                 setIsAdmin(false);
@@ -51,8 +55,12 @@ export const AuthProvider = ({ children }) => {
             const result = await signInWithPopup(auth, provider);
 
             // Check if the logged-in user is admin
-            const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-            if (result.user.email !== adminEmail) {
+            const adminEmails = [
+                process.env.NEXT_PUBLIC_ADMIN_EMAIL,
+                'info@lebanonbuyers.com',
+                'moumenhamdan5@gmail.com'
+            ];
+            if (!adminEmails.includes(result.user.email)) {
                 // If not admin, sign them out
                 await signOut(auth);
                 return {

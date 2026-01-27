@@ -15,7 +15,7 @@ export default function ContactPage() {
         address: 'Beirut, Lebanon'
     });
 
-    const [formState, setFormState] = useState({ name: '', email: '', message: '' });
+    const [formState, setFormState] = useState({ name: '', email: '', phone: '', message: '' });
     const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
@@ -32,7 +32,7 @@ export default function ContactPage() {
         // In a real app, you'd send this to an API or Firestore
         setSubmitted(true);
         setTimeout(() => setSubmitted(false), 5000);
-        setFormState({ name: '', email: '', message: '' });
+        setFormState({ name: '', email: '', phone: '', message: '' });
     };
 
     return (
@@ -57,7 +57,7 @@ export default function ContactPage() {
                     <p className="text-xl text-gray-500">{content.subtitle}</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-20">
                     {/* Contact Info */}
                     <div className="lg:col-span-1 space-y-8">
                         <div className="p-8 bg-white rounded-3xl shadow-luxury border border-gray-50">
@@ -76,7 +76,7 @@ export default function ContactPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Call Us</p>
-                                    <p className="text-lg font-bold text-primary">{content.phone}</p>
+                                    <a href={`tel:${content.phone}`} className="text-lg font-bold text-primary hover:text-accent transition-colors">{content.phone}</a>
                                 </div>
                             </div>
                             <div className="flex items-center gap-6">
@@ -133,6 +133,17 @@ export default function ContactPage() {
                                         </div>
                                     </div>
                                     <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            required
+                                            className="input-field"
+                                            placeholder="+961 70 000 000"
+                                            value={formState.phone}
+                                            onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
                                         <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Message</label>
                                         <textarea
                                             required
@@ -151,6 +162,24 @@ export default function ContactPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Google Map */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="w-full h-[500px] rounded-[3rem] overflow-hidden shadow-luxury border border-white"
+                >
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d106014.10189495115!2d35.43398935406734!3d33.88921101931341!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f17215882853f%3A0x7a3b84838c674063!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2slb!4v1705850000000!5m2!1sen!2slb"
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen=""
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                </motion.div>
             </div>
         </div>
     );

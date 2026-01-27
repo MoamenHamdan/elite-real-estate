@@ -177,6 +177,95 @@ export default function AdminSettings() {
                     </div>
 
                     <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                        <h2 className="text-xl font-bold mb-6">Homepage Counters (Stats)</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {(homeContent.stats || [
+                                { label: 'Total Property Value', value: '250M', description: 'Managed and sold across Lebanon' },
+                                { label: 'Premium Clients', value: '1500', description: 'Trusted by investors worldwide' },
+                                { label: 'Years Excellence', value: '12', description: 'Leading the real estate market' },
+                                { label: 'Active Listings', value: '450', description: 'Exclusive off-market opportunities' }
+                            ]).map((stat, index) => (
+                                <div key={index} className="p-6 bg-light rounded-2xl space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Value (e.g. 250M)</label>
+                                            <input
+                                                type="text"
+                                                className="input-field"
+                                                value={stat.value}
+                                                onChange={(e) => {
+                                                    const newStats = [...(homeContent.stats || [])];
+                                                    if (newStats.length === 0) {
+                                                        const initial = [
+                                                            { label: 'Total Property Value', value: '250M', description: 'Managed and sold across Lebanon' },
+                                                            { label: 'Premium Clients', value: '1500', description: 'Trusted by investors worldwide' },
+                                                            { label: 'Years Excellence', value: '12', description: 'Leading the real estate market' },
+                                                            { label: 'Active Listings', value: '450', description: 'Exclusive off-market opportunities' }
+                                                        ];
+                                                        initial[index].value = e.target.value;
+                                                        setHomeContent({ ...homeContent, stats: initial });
+                                                    } else {
+                                                        newStats[index].value = e.target.value;
+                                                        setHomeContent({ ...homeContent, stats: newStats });
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Label</label>
+                                            <input
+                                                type="text"
+                                                className="input-field"
+                                                value={stat.label}
+                                                onChange={(e) => {
+                                                    const newStats = [...(homeContent.stats || [])];
+                                                    if (newStats.length === 0) {
+                                                        const initial = [
+                                                            { label: 'Total Property Value', value: '250M', description: 'Managed and sold across Lebanon' },
+                                                            { label: 'Premium Clients', value: '1500', description: 'Trusted by investors worldwide' },
+                                                            { label: 'Years Excellence', value: '12', description: 'Leading the real estate market' },
+                                                            { label: 'Active Listings', value: '450', description: 'Exclusive off-market opportunities' }
+                                                        ];
+                                                        initial[index].label = e.target.value;
+                                                        setHomeContent({ ...homeContent, stats: initial });
+                                                    } else {
+                                                        newStats[index].label = e.target.value;
+                                                        setHomeContent({ ...homeContent, stats: newStats });
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Description</label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            value={stat.description}
+                                            onChange={(e) => {
+                                                const newStats = [...(homeContent.stats || [])];
+                                                if (newStats.length === 0) {
+                                                    const initial = [
+                                                        { label: 'Total Property Value', value: '250M', description: 'Managed and sold across Lebanon' },
+                                                        { label: 'Premium Clients', value: '1500', description: 'Trusted by investors worldwide' },
+                                                        { label: 'Years Excellence', value: '12', description: 'Leading the real estate market' },
+                                                        { label: 'Active Listings', value: '450', description: 'Exclusive off-market opportunities' }
+                                                    ];
+                                                    initial[index].description = e.target.value;
+                                                    setHomeContent({ ...homeContent, stats: initial });
+                                                } else {
+                                                    newStats[index].description = e.target.value;
+                                                    setHomeContent({ ...homeContent, stats: newStats });
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
                         <h2 className="text-xl font-bold mb-6">Elite Advantages</h2>
                         <div className="space-y-6">
                             {homeContent.advantages.map((adv, index) => (

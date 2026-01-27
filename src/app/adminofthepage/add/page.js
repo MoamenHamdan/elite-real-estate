@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FiUpload, FiX, FiPlus, FiSave, FiAlertCircle } from 'react-icons/fi';
+import { FiUpload, FiX, FiPlus, FiSave, FiAlertCircle, FiStar } from 'react-icons/fi';
 import { collection, addDoc, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+
+import { compressImage } from '@/lib/utils';
 
 export default function AddProperty() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [images, setImages] = useState([]);
+    const [uploadingImages, setUploadingImages] = useState(false);
     const [propertyTypes, setPropertyTypes] = useState(['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Commercial', 'Land']);
     const [formData, setFormData] = useState({
         title: '',
@@ -24,6 +27,7 @@ export default function AddProperty() {
         acquisitionPrice: '',
         sellingPrice: '',
         status: 'Acquired',
+        isHotDeal: false,
     });
 
     useEffect(() => {
@@ -43,21 +47,27 @@ export default function AddProperty() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-        files.forEach(file => {
-            if (file.size > 2 * 1024 * 1024) {
-                setError('Each image must be less than 2MB');
-                return;
-            }
+        setUploadingImages(true);
+        setError('');
 
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImages(prev => [...prev, reader.result]);
-            };
-            reader.readAsDataURL(file);
-        });
+        try {
+            const uploadPromises = files.map(async (file) => {
+                // Compress and convert to Base64
+                const base64 = await compressImage(file);
+                return base64;
+            });
+
+            const urls = await Promise.all(uploadPromises);
+            setImages(prev => [...prev, ...urls]);
+        } catch (err) {
+            setError('Failed to upload images: ' + err.message);
+        } finally {
+            setUploadingImages(false);
+        }
     };
 
     const removeImage = (index) => {
@@ -261,6 +271,20 @@ export default function AddProperty() {
                                     {statuses.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
+                            <div className="flex items-center gap-3 pt-4">
+                                <input
+                                    type="checkbox"
+                                    id="isHotDeal"
+                                    name="isHotDeal"
+                                    checked={formData.isHotDeal}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, isHotDeal: e.target.checked }))}
+                                    className="w-5 h-5 accent-accent rounded"
+                                />
+                                <label htmlFor="isHotDeal" className="text-sm font-bold text-gray-700 uppercase flex items-center gap-2 cursor-pointer">
+                                    <FiStar className={formData.isHotDeal ? "fill-accent text-accent" : "text-gray-400"} />
+                                    Mark as Hot Deal
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,19 +309,26 @@ export default function AddProperty() {
                                 </button>
                             </div>
                         ))}
-                        <label className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all">
-                            <FiUpload className="text-3xl text-gray-300 mb-2" />
-                            <span className="text-xs font-bold text-gray-400 uppercase">Upload Image</span>
+                        <label className={`aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all ${uploadingImages ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                            {uploadingImages ? (
+                                <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    <FiUpload className="text-3xl text-gray-300 mb-2" />
+                                    <span className="text-xs font-bold text-gray-400 uppercase">Upload Image</span>
+                                </>
+                            )}
                             <input
                                 type="file"
                                 multiple
                                 accept="image/*"
                                 onChange={handleImageUpload}
                                 className="hidden"
+                                disabled={uploadingImages}
                             />
                         </label>
                     </div>
-                    <p className="text-xs text-gray-400 italic">Note: Images are stored locally in the database. Please keep them under 2MB each for optimal performance.</p>
+                    <p className="text-xs text-gray-400 italic">Note: Images are stored securely in the cloud. No size limit applies.</p>
                 </div>
 
                 {/* Submit Button */}

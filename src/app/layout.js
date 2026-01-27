@@ -3,7 +3,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const metadata = {
-  title: "Lebanon Buyers | Premium Real Estate Investment",
+  title: "Buyers-lb | Premium Real Estate Investment",
   description: "Luxury digital showroom and inventory system for high-end real estate investments in Lebanon.",
 };
 

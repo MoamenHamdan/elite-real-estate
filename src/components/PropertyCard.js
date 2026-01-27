@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FiMapPin, FiMaximize, FiBox, FiDroplet, FiArrowRight } from 'react-icons/fi';
+import { MapPin, Maximize2, BedDouble, Bath, ArrowRight, Star, Heart } from 'lucide-react';
 
 const PropertyCard = ({ property }) => {
     const {
@@ -16,7 +16,8 @@ const PropertyCard = ({ property }) => {
         bathrooms,
         sellingPrice,
         images,
-        status
+        status,
+        isHotDeal
     } = property;
 
     const mainImage = images && images.length > 0
@@ -36,10 +37,10 @@ const PropertyCard = ({ property }) => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="card group h-full flex flex-col"
+            className="group relative bg-white rounded-[2.5rem] overflow-hidden shadow-luxury hover:shadow-luxury-hover transition-all duration-700 h-full flex flex-col border border-gray-100"
         >
             {/* Image Section */}
-            <div className="relative h-80 overflow-hidden">
+            <div className="relative h-72 overflow-hidden">
                 <Image
                     src={mainImage}
                     alt={title}
@@ -48,62 +49,71 @@ const PropertyCard = ({ property }) => {
                 />
 
                 {/* Badges */}
-                <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    <span className="px-4 py-1.5 glass-dark text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
+                <div className="absolute top-6 left-6 flex flex-col gap-2 z-10">
+                    {isHotDeal && (
+                        <span className="px-4 py-2 bg-accent text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md">
+                            <Star size={12} className="fill-white" /> Hot Deal
+                        </span>
+                    )}
+                    <span className="px-4 py-2 glass-dark text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
                         {type}
-                    </span>
-                    <span className={`px-4 py-1.5 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full ${status === 'For Sale' ? 'bg-success' : 'bg-accent'
-                        }`}>
-                        {status}
                     </span>
                 </div>
 
-                {/* Price Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                    <p className="text-3xl font-serif font-bold text-white tracking-tight">
-                        {formatCurrency(sellingPrice)}
-                    </p>
+                {/* Wishlist Button */}
+                <button className="absolute top-6 right-6 w-10 h-10 rounded-full glass-dark flex items-center justify-center text-white hover:bg-accent transition-colors duration-300 z-10">
+                    <Heart size={18} />
+                </button>
+
+                {/* Status Overlay */}
+                <div className="absolute bottom-6 left-6 z-10">
+                    <span className={`px-4 py-1.5 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full ${status === 'For Sale' ? 'bg-success/80' : 'bg-primary/80'
+                        } backdrop-blur-md`}>
+                        {status}
+                    </span>
                 </div>
             </div>
 
             {/* Content Section */}
             <div className="p-8 flex-grow flex flex-col">
-                <div className="flex items-center gap-2 text-accent mb-3">
-                    <FiMapPin size={14} />
-                    <span className="text-xs font-bold uppercase tracking-widest">{location}</span>
+                <div className="flex items-center gap-2 text-accent mb-4">
+                    <MapPin size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{location}</span>
                 </div>
 
-                <h3 className="text-2xl font-serif font-bold mb-6 line-clamp-2 group-hover:text-accent transition-colors duration-300">
+                <h3 className="text-2xl font-serif font-bold mb-6 line-clamp-2 group-hover:text-accent transition-colors duration-500">
                     {title}
                 </h3>
 
                 {/* Specs Grid */}
                 <div className="grid grid-cols-3 gap-4 py-6 border-y border-gray-50 mb-8">
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-light flex items-center justify-center text-gray-400 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
-                            <FiMaximize size={18} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{size} sqm</span>
+                        <Maximize2 size={18} className="text-gray-400 group-hover:text-accent transition-colors" />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{size} sqm</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-light flex items-center justify-center text-gray-400 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
-                            <FiBox size={18} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bedrooms} Beds</span>
+                        <BedDouble size={18} className="text-gray-400 group-hover:text-accent transition-colors" />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{bedrooms} Beds</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-light flex items-center justify-center text-gray-400 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
-                            <FiDroplet size={18} />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bathrooms} Baths</span>
+                        <Bath size={18} className="text-gray-400 group-hover:text-accent transition-colors" />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{bathrooms} Baths</span>
                     </div>
                 </div>
 
-                <Link href={`/properties/${id}`} className="mt-auto">
-                    <button className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-accent transition-all duration-500 flex items-center justify-center gap-3 group/btn">
-                        View Investment <FiArrowRight className="group-hover/btn:translate-x-2 transition-transform" />
-                    </button>
-                </Link>
+                <div className="mt-auto flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Investment</p>
+                        <p className="text-2xl font-serif font-bold text-primary">
+                            {formatCurrency(sellingPrice)}
+                        </p>
+                    </div>
+                    <Link href={`/properties/${id}`}>
+                        <button className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center hover:bg-accent transition-all duration-500 group/btn shadow-lg">
+                            <ArrowRight className="group-hover/btn:translate-x-1 transition-transform" />
+                        </button>
+                    </Link>
+                </div>
             </div>
         </motion.div>
     );
