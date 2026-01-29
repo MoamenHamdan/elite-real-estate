@@ -5,6 +5,9 @@ import LayoutWrapper from "@/components/LayoutWrapper";
 export const metadata = {
   title: "Buyers-lb | Premium Real Estate Investment",
   description: "Luxury digital showroom and inventory system for high-end real estate investments in Lebanon.",
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -63,8 +63,8 @@ export default function Footer() {
                     {/* Brand Section */}
                     <div className="lg:col-span-5 space-y-10">
                         <Link href="/" className="flex items-center space-x-4 group">
-                            <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform duration-500">
-                                <Building2 size={28} />
+                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500">
+                                <img src="/logo.png" alt="Buyers-lb Logo" className="w-full h-full object-cover" />
                             </div>
                             <div className="flex flex-col">
                                 <h3 className="text-2xl font-serif font-bold tracking-tight leading-none">Buyers-lb</h3>

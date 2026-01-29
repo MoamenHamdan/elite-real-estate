@@ -51,8 +51,8 @@ const PropertyCard = ({ property }) => {
                 {/* Badges */}
                 <div className="absolute top-6 left-6 flex flex-col gap-2 z-10">
                     {isHotDeal && (
-                        <span className="px-4 py-2 bg-accent text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full flex items-center gap-2 shadow-lg backdrop-blur-md">
-                            <Star size={12} className="fill-white" /> Hot Deal
+                        <span className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full flex items-center gap-2 shadow-lg shadow-orange-500/40 animate-pulse">
+                            <span>🔥</span> Hot Deal
                         </span>
                     )}
                     <span className="px-4 py-2 glass-dark text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">

@@ -52,6 +52,28 @@ export default function Background() {
                 className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-navy/5 blur-[120px]"
             />
 
+            {/* Moving "Articles" / Keywords in Background */}
+            <div className="absolute inset-0 opacity-[0.02] select-none">
+                <div className="absolute top-[15%] left-0 w-full overflow-hidden whitespace-nowrap">
+                    <motion.div
+                        animate={{ x: [0, -1000] }}
+                        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                        className="text-[10vh] font-serif font-bold uppercase tracking-[0.5em]"
+                    >
+                        Luxury Real Estate • Premium Assets • Strategic Investment • Exclusive Acquisitions • High-Yield Portfolio •
+                    </motion.div>
+                </div>
+                <div className="absolute top-[60%] left-0 w-full overflow-hidden whitespace-nowrap">
+                    <motion.div
+                        animate={{ x: [-1000, 0] }}
+                        transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+                        className="text-[12vh] font-serif font-bold uppercase tracking-[0.5em] text-accent"
+                    >
+                        Architectural Excellence • Modern Living • Beirut • Lebanon • Buyers-lb • Elite Properties •
+                    </motion.div>
+                </div>
+            </div>
+
             <motion.div
                 animate={{
                     x: mousePosition.x * 0.05,

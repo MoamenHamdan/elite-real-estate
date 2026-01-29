@@ -86,8 +86,8 @@ export default function Navbar() {
                 <div className="flex items-center justify-between">
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-3 group">
-                        <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform duration-500">
-                            <Building2 size={24} />
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500">
+                            <img src="/logo.png" alt="Buyers-lb Logo" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col">
                             <h1 className="text-xl font-bold font-serif tracking-tight leading-none">
@@ -104,9 +104,9 @@ export default function Navbar() {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className={`relative text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 hover:text-accent ${getTextColor(isActive(link.href))}`}
+                                className={`relative text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 hover:text-accent flex items-center gap-1 ${getTextColor(isActive(link.href))}`}
                             >
-                                {link.label}
+                                {link.label} {link.label === 'Hot Deals' && '🔥'}
                                 {isActive(link.href) && (
                                     <motion.div
                                         layoutId="activeNav"
@@ -169,10 +169,10 @@ export default function Navbar() {
                                         key={link.href}
                                         href={link.href}
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`text-3xl font-serif font-bold ${isActive(link.href) ? 'text-accent' : 'text-primary'
+                                        className={`text-3xl font-serif font-bold flex items-center gap-2 ${isActive(link.href) ? 'text-accent' : 'text-primary'
                                             }`}
                                     >
-                                        {link.label}
+                                        {link.label} {link.label === 'Hot Deals' && '🔥'}
                                     </Link>
                                 ))}
                                 <div className="pt-8 border-t border-gray-100">

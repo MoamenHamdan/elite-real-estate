@@ -93,16 +93,26 @@ export default function PropertiesPage() {
     }, [properties, searchQuery, filters]);
 
     return (
-        <div className="pt-40 pb-24 bg-light min-h-screen">
-            <div className="container-custom">
+        <div className={`pt-40 pb-24 min-h-screen transition-colors duration-700 ${filters.isHotDeal ? 'bg-[#0a0a0a] text-white' : 'bg-light'}`}>
+            {/* Hot Deals Background Effect */}
+            {filters.isHotDeal && (
+                <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                    <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-orange-600/10 blur-[120px] rounded-full animate-pulse" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-red-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+                </div>
+            )}
+
+            <div className="container-custom relative z-10">
                 {/* Header */}
                 <div className="max-w-4xl mb-16">
                     <motion.span
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-accent font-bold tracking-[0.3em] uppercase mb-4 block"
+                        className={`${filters.isHotDeal ? 'text-orange-500' : 'text-accent'} font-bold tracking-[0.3em] uppercase mb-4 block flex items-center gap-2`}
                     >
-                        Exclusive Inventory
+                        {filters.isHotDeal && <span className="animate-bounce">🔥</span>}
+                        {filters.isHotDeal ? 'Limited Time Opportunities' : 'Exclusive Inventory'}
+                        {filters.isHotDeal && <span className="animate-bounce">🔥</span>}
                     </motion.span>
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
@@ -110,15 +120,21 @@ export default function PropertiesPage() {
                         transition={{ delay: 0.1 }}
                         className="text-5xl md:text-7xl font-serif font-bold mb-6"
                     >
-                        Curated <span className="text-accent">Investments</span>
+                        {filters.isHotDeal ? (
+                            <>Hot <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Investments</span></>
+                        ) : (
+                            <>Curated <span className="text-accent">Investments</span></>
+                        )}
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-xl text-gray-500 leading-relaxed"
+                        className={`text-xl leading-relaxed ${filters.isHotDeal ? 'text-gray-400' : 'text-gray-500'}`}
                     >
-                        Explore our elite portfolio of high-yield real estate assets, meticulously selected for their architectural excellence and strategic potential.
+                        {filters.isHotDeal
+                            ? "Act fast on our most sought-after properties. These high-demand assets are priced for immediate acquisition and won't stay on the market for long."
+                            : "Explore our elite portfolio of high-yield real estate assets, meticulously selected for their architectural excellence and strategic potential."}
                     </motion.p>
                 </div>
 
