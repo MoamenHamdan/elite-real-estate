@@ -15,6 +15,7 @@ export default function Navbar() {
     const [navLinks, setNavLinks] = useState([
         { href: '/', label: 'Home' },
         { href: '/properties', label: 'Properties' },
+        { href: '/rent', label: 'Rent' },
         { href: '/properties?filter=hot-deals', label: 'Hot Deals' },
         { href: '/about', label: 'About' },
         { href: '/contact', label: 'Contact' },
@@ -23,7 +24,7 @@ export default function Navbar() {
     const { user, logout, isAdmin } = useAuth();
 
     // Pages that have a white background and need dark text even when not scrolled
-    const isWhiteBgPage = pathname === '/properties' || pathname === '/about' || pathname === '/contact' || pathname.includes('hot-deals');
+    const isWhiteBgPage = pathname === '/properties' || pathname === '/rent' || pathname === '/about' || pathname === '/contact' || pathname.includes('hot-deals');
 
     useEffect(() => {
         const handleScroll = () => {
@@ -43,8 +44,9 @@ export default function Navbar() {
                     setNavLinks([
                         { href: '/', label: 'Home' },
                         { href: '/properties', label: 'Properties' },
+                        { href: '/rent', label: 'Rent' },
                         { href: '/properties?filter=hot-deals', label: 'Hot Deals' },
-                        ...firestoreLinks.filter(l => l.label !== 'Home' && l.label !== 'Properties')
+                        ...firestoreLinks.filter(l => l.label !== 'Home' && l.label !== 'Properties' && l.label !== 'Rent')
                     ]);
                 } else {
                     setNavLinks(firestoreLinks);

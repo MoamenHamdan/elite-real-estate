@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiHome, FiDollarSign, FiTrendingUp, FiCheckCircle, FiClock, FiActivity } from 'react-icons/fi';
+import { FiHome, FiDollarSign, FiTrendingUp, FiCheckCircle, FiClock, FiActivity, FiMail } from 'react-icons/fi';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
@@ -18,10 +18,12 @@ export default function AdminDashboard() {
         avgROI: 0,
     });
     const [recentProperties, setRecentProperties] = useState([]);
+    const [recentMessages, setRecentMessages] = useState([]);
 
     useEffect(() => {
-        const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        // Properties query
+        const qProps = query(collection(db, 'properties'), orderBy('createdAt', 'desc'));
+        const unsubProps = onSnapshot(qProps, (snapshot) => {
             const propertyList = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
@@ -53,7 +55,22 @@ export default function AdminDashboard() {
 
             setRecentProperties(propertyList.slice(0, 5));
         });
-        return () => unsubscribe();
+
+        // Messages query
+        const qMsgs = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+        const unsubMsgs = onSnapshot(qMsgs, (snapshot) => {
+            const messageList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+            })).slice(0, 5);
+            setRecentMessages(messageList);
+        });
+
+        return () => {
+            unsubProps();
+            unsubMsgs();
+        };
     }, []);
 
     const formatCurrency = (value) => {
@@ -75,6 +92,13 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-8">
+            {/* Quick Actions Bar */}
+            <div className="flex justify-end">
+                <Link href="/properties" className="btn-secondary">
+                    View Client Page
+                </Link>
+            </div>
+
             {/* KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {kpis.map((kpi, index) => (
@@ -131,25 +155,33 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Investment Performance Chart Placeholder */}
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
-                    <div className="w-24 h-24 bg-accent/10 rounded-full flex items-center justify-center mb-6">
-                        <FiTrendingUp className="text-4xl text-accent" />
+                {/* Recent Messages */}
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-8">
+                        <h3 className="text-xl font-bold text-primary">Recent Inquiries</h3>
+                        <Link href="/adminofthepage/messages" className="text-accent text-sm font-bold hover:underline">View All</Link>
                     </div>
-                    <h3 className="text-xl font-bold text-primary mb-2">Investment Performance</h3>
-                    <p className="text-gray-500 max-w-xs">
-                        Detailed analytics and ROI projections will appear here as you add more properties to your portfolio.
-                    </p>
-                    <div className="mt-8 w-full h-48 bg-light rounded-xl flex items-end justify-around p-4 gap-2">
-                        {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ height: 0 }}
-                                animate={{ height: `${h}%` }}
-                                transition={{ delay: i * 0.1, duration: 1 }}
-                                className="w-full bg-accent/20 rounded-t-lg hover:bg-accent transition-colors cursor-pointer"
-                            />
-                        ))}
+                    <div className="space-y-6">
+                        {recentMessages.length > 0 ? recentMessages.map((msg) => (
+                            <Link key={msg.id} href="/adminofthepage/messages">
+                                <div className={`flex items-center justify-between p-4 bg-light rounded-xl hover:bg-accent/5 transition-colors mb-4 ${!msg.read ? 'border-l-4 border-accent' : ''}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center text-accent">
+                                            <FiMail />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-primary line-clamp-1">{msg.name}</p>
+                                            <p className="text-xs text-gray-400 line-clamp-1">{msg.message}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        {!msg.read && <span className="bg-accent text-white text-[10px] px-2 py-1 rounded-full font-bold">New</span>}
+                                    </div>
+                                </div>
+                            </Link>
+                        )) : (
+                            <p className="text-center text-gray-400 py-12">No inquiries received yet.</p>
+                        )}
                     </div>
                 </div>
             </div>

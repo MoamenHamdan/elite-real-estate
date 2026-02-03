@@ -376,9 +376,10 @@ export default function House3D() {
         <div className="w-full h-[400px] md:h-[600px] cursor-grab active:cursor-grabbing relative rounded-3xl overflow-hidden shadow-2xl">
             <Canvas
                 shadows
-                dpr={[1, 2]}
+                dpr={[1, 1.5]}
                 gl={{
-                    antialias: true,
+                    antialias: false,
+                    powerPreference: "high-performance",
                     toneMapping: THREE.ACESFilmicToneMapping,
                     toneMappingExposure: 1.1
                 }}
@@ -409,8 +410,8 @@ export default function House3D() {
                     position={[15, 20, 10]}
                     intensity={1.5}
                     castShadow
-                    shadow-mapSize-width={2048}
-                    shadow-mapSize-height={2048}
+                    shadow-mapSize-width={1024}
+                    shadow-mapSize-height={1024}
                     shadow-camera-far={50}
                     shadow-camera-left={-15}
                     shadow-camera-right={15}
@@ -470,7 +471,7 @@ export default function House3D() {
                     <planeGeometry args={[50, 50]} />
                     <MeshReflectorMaterial
                         blur={[300, 100]}
-                        resolution={2048}
+                        resolution={512}
                         mixBlur={1}
                         mixStrength={40}
                         roughness={1}

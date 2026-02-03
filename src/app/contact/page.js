@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiMail, FiPhone, FiMapPin, FiSend, FiCheckCircle } from 'react-icons/fi';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export default function ContactPage() {
@@ -17,6 +17,7 @@ export default function ContactPage() {
 
     const [formState, setFormState] = useState({ name: '', email: '', phone: '', message: '' });
     const [submitted, setSubmitted] = useState(false);
+    const [sending, setSending] = useState(false);
 
     useEffect(() => {
         const unsub = onSnapshot(doc(db, 'content', 'contact'), (snap) => {
@@ -27,12 +28,27 @@ export default function ContactPage() {
         return () => unsub();
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // In a real app, you'd send this to an API or Firestore
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 5000);
-        setFormState({ name: '', email: '', phone: '', message: '' });
+        setSending(true);
+
+        try {
+            // Save message to Firestore
+            await addDoc(collection(db, 'messages'), {
+                ...formState,
+                createdAt: serverTimestamp(),
+                read: false,
+            });
+
+            setSubmitted(true);
+            setTimeout(() => setSubmitted(false), 5000);
+            setFormState({ name: '', email: '', phone: '', message: '' });
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Failed to send message. Please try again.');
+        } finally {
+            setSending(false);
+        }
     };
 
     return (
@@ -154,8 +170,21 @@ export default function ContactPage() {
                                             onChange={(e) => setFormState({ ...formState, message: e.target.value })}
                                         ></textarea>
                                     </div>
-                                    <button type="submit" className="btn-primary w-full flex items-center justify-center gap-3">
-                                        <FiSend /> Send Message
+                                    <button
+                                        type="submit"
+                                        disabled={sending}
+                                        className="btn-primary w-full flex items-center justify-center gap-3"
+                                    >
+                                        {sending ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FiSend /> Send Message
+                                            </>
+                                        )}
                                     </button>
                                 </form>
                             )}

@@ -46,6 +46,7 @@ const PropertyCard = ({ property }) => {
                     alt={title}
                     fill
                     className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
 
                 {/* Badges */}
@@ -67,8 +68,9 @@ const PropertyCard = ({ property }) => {
 
                 {/* Status Overlay */}
                 <div className="absolute bottom-6 left-6 z-10">
-                    <span className={`px-4 py-1.5 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full ${status === 'For Sale' ? 'bg-success/80' : 'bg-primary/80'
-                        } backdrop-blur-md`}>
+                    <span className={`px-5 py-2 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full backdrop-blur-md shadow-lg ${status === 'For Sale' ? 'bg-success/80' : 'bg-red-600/90'
+                        }`}>
+                        {status === 'Sold' && <span className="mr-2 italic">●</span>}
                         {status}
                     </span>
                 </div>
@@ -76,12 +78,14 @@ const PropertyCard = ({ property }) => {
 
             {/* Content Section */}
             <div className="p-8 flex-grow flex flex-col">
-                <div className="flex items-center gap-2 text-accent mb-4">
-                    <MapPin size={14} />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{location}</span>
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-accent/5 rounded-lg border border-accent/10">
+                        <MapPin size={12} className="text-accent" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent/80">{location}</span>
+                    </div>
                 </div>
 
-                <h3 className="text-2xl font-serif font-bold mb-6 line-clamp-2 group-hover:text-accent transition-colors duration-500">
+                <h3 className="text-2xl font-serif font-bold mb-6 line-clamp-2 group-hover:text-accent transition-all duration-500 leading-snug">
                     {title}
                 </h3>
 

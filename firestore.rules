@@ -55,6 +55,14 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Messages Collection (Contact Form)
+    // - Anyone can create a message
+    // - Only Admin can read, update, or delete
+    match /messages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
     // 4. Client Feedback / Reviews
     // - Anyone can read approved feedback
     // - Anyone can submit feedback (create)
@@ -81,4 +89,3 @@ service cloud.firestore {
   }
 }
 
-//71476572

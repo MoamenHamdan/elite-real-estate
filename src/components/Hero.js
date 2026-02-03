@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { Search, MapPin, Home, DollarSign, ArrowRight, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -34,88 +35,25 @@ const Hero = ({ content }) => {
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentImage}
-                        initial={{ opacity: 0, scale: 1.1 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 2, ease: "easeOut" }}
+                        transition={{ duration: 1.5 }}
                         className="absolute inset-0"
                     >
-                        <img
+                        <Image
                             src={images[currentImage]}
                             className="w-full h-full object-cover"
                             alt="Luxury Real Estate"
+                            fill
+                            priority={currentImage === 0}
+                            sizes="100vw"
                         />
-                        <div className="absolute inset-0 bg-navy/60 backdrop-blur-[1px]"></div>
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Interactive Mesh Gradient */}
-                <motion.div
-                    animate={{
-                        background: [
-                            'radial-gradient(at 0% 0%, hsla(222,47%,11%,0.8) 0, transparent 50%)',
-                            'radial-gradient(at 100% 100%, hsla(222,47%,11%,0.8) 0, transparent 50%)',
-                            'radial-gradient(at 0% 100%, hsla(222,47%,11%,0.8) 0, transparent 50%)',
-                            'radial-gradient(at 100% 0%, hsla(222,47%,11%,0.8) 0, transparent 50%)',
-                            'radial-gradient(at 0% 0%, hsla(222,47%,11%,0.8) 0, transparent 50%)',
-                        ]
-                    }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 z-10 opacity-60"
-                />
-
-                {/* Infinite Moving "Articles" / Keywords Background */}
-                <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none opacity-[0.03]">
-                    <div className="absolute top-1/4 -left-20 w-[200%] flex gap-20 animate-marquee whitespace-nowrap">
-                        {[...Array(10)].map((_, i) => (
-                            <span key={i} className="text-[15vh] font-serif font-bold text-white uppercase tracking-[0.2em]">
-                                Exclusive Acquisitions • Prime Locations • High-Yield Assets •
-                            </span>
-                        ))}
-                    </div>
-                    <div className="absolute top-2/4 -right-20 w-[200%] flex gap-20 animate-marquee-reverse whitespace-nowrap">
-                        {[...Array(10)].map((_, i) => (
-                            <span key={i} className="text-[15vh] font-serif font-bold text-accent uppercase tracking-[0.2em]">
-                                Luxury Living • Architectural Excellence • Buyers-lb •
-                            </span>
-                        ))}
-                    </div>
-                    <div className="absolute top-3/4 -left-20 w-[200%] flex gap-20 animate-marquee whitespace-nowrap">
-                        {[...Array(10)].map((_, i) => (
-                            <span key={i} className="text-[15vh] font-serif font-bold text-white uppercase tracking-[0.2em]">
-                                Strategic Investment • Premium Renovation • Elite Portfolio •
-                            </span>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Floating Particles (Client-side only to avoid hydration mismatch) */}
-                <div className="absolute inset-0 z-10 pointer-events-none">
-                    {mounted && [...Array(20)].map((_, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{
-                                x: Math.random() * 100 + "%",
-                                y: Math.random() * 100 + "%",
-                                opacity: Math.random() * 0.5
-                            }}
-                            animate={{
-                                y: [null, "-20%", "120%"],
-                                x: [null, (Math.random() - 0.5) * 20 + "%", (Math.random() - 0.5) * 20 + "%"]
-                            }}
-                            transition={{
-                                duration: Math.random() * 10 + 10,
-                                repeat: Infinity,
-                                ease: "linear",
-                                delay: Math.random() * 10
-                            }}
-                            className="absolute w-1 h-1 bg-accent rounded-full blur-[1px]"
-                        />
-                    ))}
-                </div>
-
                 {/* Decorative Overlays */}
-                <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-transparent to-navy/90 z-20"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/40 to-navy/90 z-20"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-navy/60 via-transparent to-transparent z-20"></div>
             </div>
 
@@ -126,17 +64,12 @@ const Hero = ({ content }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                     >
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="flex items-center gap-3 mb-6"
-                        >
+                        <div className="flex items-center gap-3 mb-6">
                             <span className="w-12 h-[1px] bg-accent"></span>
                             <span className="text-accent font-bold uppercase tracking-[0.3em] text-sm">
                                 Premium Real Estate Lebanon
                             </span>
-                        </motion.div>
+                        </div>
 
                         <h1 className="text-4xl md:text-7xl font-serif font-bold text-white mb-8 leading-[1.1] tracking-tight">
                             Elevate Your <br />

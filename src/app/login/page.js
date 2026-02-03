@@ -118,7 +118,13 @@ export default function LoginPage() {
                             </button>
                         </form>
 
-                        <div className="mt-10 pt-8 border-t border-white/10 text-center">
+                        <div className="mt-8 pt-6 border-t border-white/10">
+                            <Link href="/" className="btn-secondary w-full !bg-white/5 !border-white/20 !text-white hover:!bg-white/10">
+                                View Homepage
+                            </Link>
+                        </div>
+
+                        <div className="mt-8 text-center">
                             <div className="flex items-center justify-center gap-2 text-gray-500 text-sm mb-4">
                                 <FiShield className="text-accent" />
                                 <span>End-to-End Encrypted Session</span>

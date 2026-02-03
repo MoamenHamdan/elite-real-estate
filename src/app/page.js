@@ -8,9 +8,16 @@ import PropertyCard from '@/components/PropertyCard';
 import Hero from '@/components/Hero';
 import Stats from '@/components/Stats';
 import Testimonials from '@/components/Testimonials';
-import House3D from '@/components/House3D';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, CheckCircle2, Award, ShieldCheck, Globe2 } from 'lucide-react';
+
+// Dynamically import heavy 3D component
+const House3D = dynamic(() => import('@/components/House3D'), {
+  ssr: false,
+  loading: () => <div className="w-full h-[400px] md:h-[600px] bg-gray-50 animate-pulse rounded-3xl" />
+});
 
 export default function Home() {
   const [properties, setProperties] = useState([]);
@@ -239,10 +246,12 @@ export default function Home() {
         <div className="container-custom">
           <div className="relative rounded-[4rem] overflow-hidden bg-primary p-12 md:p-32 text-center shadow-2xl">
             <div className="absolute inset-0 opacity-30">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
                 className="w-full h-full object-cover"
                 alt="Luxury Estate"
+                fill
+                sizes="100vw"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-primary via-primary/80 to-primary"></div>
             </div>

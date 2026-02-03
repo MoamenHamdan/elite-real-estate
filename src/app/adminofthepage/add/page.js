@@ -28,6 +28,8 @@ export default function AddProperty() {
         sellingPrice: '',
         status: 'Acquired',
         isHotDeal: false,
+        referTo: '', // Commission tracking
+        features: [],
     });
 
     useEffect(() => {
@@ -40,7 +42,7 @@ export default function AddProperty() {
         return () => unsubscribe();
     }, []);
 
-    const statuses = ['Acquired', 'For Sale', 'Sold'];
+    const statuses = ['Acquired', 'For Sale', 'For Rent', 'Sold'];
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -188,6 +190,69 @@ export default function AddProperty() {
                                 {propertyTypes.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
                         </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-bold text-gray-400 uppercase mb-2">
+                                Referral / Commission Info (Admin Only)
+                                <span className="ml-2 text-xs text-gray-500 normal-case">(Track who told you about this property)</span>
+                            </label>
+                            <textarea
+                                name="referTo"
+                                value={formData.referTo}
+                                onChange={handleInputChange}
+                                className="input-field min-h-[80px]"
+                                placeholder="e.g. Referred by John Doe - commission: 2.5%"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Key Features Section */}
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">2</span>
+                            Key Features
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const feature = prompt('Enter a new feature:');
+                                if (feature) {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        features: [...(prev.features || []), feature]
+                                    }));
+                                }
+                            }}
+                            className="text-accent hover:text-accent-hover font-bold text-sm flex items-center gap-1"
+                        >
+                            <FiPlus /> Add Feature
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(formData.features || []).map((feature, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-4 bg-light rounded-xl group">
+                                <span className="text-sm font-bold text-primary">{feature}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            features: prev.features.filter((_, i) => i !== idx)
+                                        }));
+                                    }}
+                                    className="p-2 text-gray-300 hover:text-error transition-colors"
+                                >
+                                    <FiX />
+                                </button>
+                            </div>
+                        ))}
+                        {(formData.features || []).length === 0 && (
+                            <div className="md:col-span-2 py-8 border-2 border-dashed border-gray-100 rounded-2xl text-center">
+                                <p className="text-gray-400 text-sm">No specific features added. Will use default amenities.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -195,7 +260,7 @@ export default function AddProperty() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">2</span>
+                            <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">3</span>
                             Specifications
                         </h2>
                         <div className="space-y-4">
@@ -236,7 +301,7 @@ export default function AddProperty() {
 
                     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">3</span>
+                            <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">4</span>
                             Financials
                         </h2>
                         <div className="space-y-4">
@@ -292,7 +357,7 @@ export default function AddProperty() {
                 {/* Image Gallery */}
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">4</span>
+                        <span className="w-8 h-8 bg-accent/10 text-accent rounded-full flex items-center justify-center text-sm">5</span>
                         Image Gallery
                     </h2>
 
